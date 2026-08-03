@@ -140,8 +140,10 @@ async function main() {
   const idPermissoes = await prisma.permissoes.findMany();
   for (const c of cargos) {
     const permDeCargo = idPermissoes
-      .filter((p) => c.permissoes.includes(p.permissao))
-      .map((p) => ({ id: p.id }));
+  .filter((p: { id: number; permissao: string }) =>
+    c.permissoes.includes(p.permissao)
+  )
+  .map((p: { id: number }) => ({ id: p.id }));
     await prisma.cargo.create({
       data: {
         id: c.id,
