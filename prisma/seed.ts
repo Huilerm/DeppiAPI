@@ -121,7 +121,7 @@ async function main() {
         "GERENCIAR_DEPPI",
         "CRIAR_ALUNO",
         "GERENCIAR_ALUNO",
-        "GERAR_RELATÓRIO",
+        "GERAR_RELATORIO",
         "VER_DASHBOARD",
         "ADMIN",
       ],
@@ -132,18 +132,21 @@ async function main() {
     const verificaPermissao = await prisma.permissoes.findFirst({
       where: { permissao: p.permissao },
     });
+
     if (!verificaPermissao) {
-      await prisma.permissoes.create({ data: p });
+      await prisma.permissoes.create({
+        data: p,
+      });
     }
   }
 
   const idPermissoes = await prisma.permissoes.findMany();
+
   for (const c of cargos) {
     const permDeCargo = idPermissoes
-  .filter((p: { id: number; permissao: string }) =>
-    c.permissoes.includes(p.permissao)
-  )
-  .map((p: { id: number }) => ({ id: p.id }));
+      .filter((p: any) => c.permissoes.includes(p.permissao))
+      .map((p: any) => ({ id: p.id }));
+
     await prisma.cargo.create({
       data: {
         id: c.id,
@@ -155,15 +158,19 @@ async function main() {
       },
     });
   }
+
+  await prisma.endereco.create({
+    data: {
+      rua: "Rua Teste",
+      bairro: "Centro",
+      numero: 123,
+      cep: 60000000,
+    },
+  });
 }
 
-const endereco = await prisma.endereco.create({
-  data: {
-    rua: "Rua Teste",
-    bairro: "Centro",
-    numero: 123,
-    cep: 60000000,
-  },
-});
-
-main();
+main()
+  .catch(console.error)
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
