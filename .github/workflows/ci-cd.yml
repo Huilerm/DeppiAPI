@@ -1,0 +1,44 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ development, production ]
+  pull_request:
+    branches: [ development, production ]
+
+jobs:
+  ci:
+    name: Integração Contínua
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar schema do Prisma
+        run: npx prisma validate
+
+      - name: Verificar tipos (TypeScript)
+        run: npm run typecheck   # ou npx tsc --noEmit, se tiver
+
+      - name: Rodar testes
+        run: npm test
+
+  deploy:
+    name: Entrega Contínua
+    needs: ci
+    if: github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Disparar deploy no Render
+        run: curl --fail "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
