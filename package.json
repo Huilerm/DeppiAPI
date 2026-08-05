@@ -8,6 +8,7 @@
     "start": "tsx src/app.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "echo \"Sem testes implementados\"",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
     "studio": "npx prisma studio",
