@@ -8,6 +8,7 @@
     "start": "tsx src/app.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "echo \"Sem testes implementados\"",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
     "studio": "npx prisma studio",
@@ -47,7 +48,7 @@
     "prisma": "^6.19.3",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^5.9.2"
   },
   "allowScripts": {
     "@prisma/engines@6.19.3": true,
