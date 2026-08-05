@@ -26,6 +26,8 @@ jobs:
 
       - name: Validar schema do Prisma
         run: npx prisma validate
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
       - name: Verificar tipos (TypeScript)
         run: npm run typecheck   # ou npx tsc --noEmit, se tiver
