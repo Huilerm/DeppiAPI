@@ -30,7 +30,16 @@ app.use("/admin/relatorios", relatorioRouter);
 
 // ── Verificar servidor ──────────────────────────────────
 app.get("/", (_req, res) => {
-  res.json({ status: "ok", mensagem: "API funcionando!" });
+  res.json({
+    status: "ok",
+    mensagem: "API funcionando!"
+  });
+});
+
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok"
+  });
 });
 // ── Verificar servidor ──────────────────────────────────
 
