@@ -10,6 +10,6 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: "postgresql://deppi:deppipass@localhost:5432/deppiapi"
+    url: process.env.DATABASE_URL,
   },
 });

@@ -74,23 +74,31 @@ export async function listarDaInscricao(req: Request, res: Response, next: NextF
 export async function visualizar(req: Request, res: Response, next: NextFunction) {
   try {
     const params = documentoIdParamsSchema.safeParse(req.params);
+
     if (!params.success) {
-      res.status(400).json({ mensagem: "Dados inválidos", erros: params.error.issues });
+      res.status(400).json({
+        mensagem: "Dados inválidos",
+        erros: params.error.issues
+      });
       return;
     }
 
     const usuarioId = req.user?.userId;
+
     if (!usuarioId) {
-      res.status(401).json({ mensagem: "Não autorizado" });
+      res.status(401).json({
+        mensagem: "Não autorizado"
+      });
       return;
     }
 
-    const documento = await buscarDocumento(params.data.id, usuarioId);
-    const caminhoAbsoluto = storageService.resolverCaminhoAbsoluto(documento.caminho);
+    const documento = await buscarDocumento(
+      params.data.id,
+      usuarioId
+    );
 
-    res.setHeader("Content-Type", documento.tipoMime);
-    res.setHeader("Content-Disposition", `inline; filename="${documento.nomeOriginal}"`);
-    res.sendFile(caminhoAbsoluto);
+    res.redirect(documento.caminho);
+
   } catch (error) {
     next(error);
   }
