@@ -58,6 +58,8 @@ export async function enviarDocumento({
     file.buffer,
     file.originalname,
     subpasta,
+    storageService.getBucketDocumentos(),
+    file.mimetype
   );
 
   return prisma.documento.create({
