@@ -2,7 +2,7 @@ import { AppError } from "../errors/AppError";
 import { supabase } from "../lib/supabase";
 import crypto from "crypto";
 
-const BUCKET_IMAGEM = process.env.SUPABASE_BUCKET_IMAGEM || "deppi-image";
+const BUCKET_IMAGEM = process.env.SUPABASE_BUCKET_IMAGEM || "deppi-imagem";
 const BUCKET_DOCS = process.env.SUPABASE_BUCKET_DOCS || "deppi-docs";
 
 export const storageService = {
