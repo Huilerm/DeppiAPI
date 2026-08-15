@@ -8,7 +8,7 @@ export async function listarUsuarios() {
     select: {
       id: true,
       nome: true,
-      email: true,
+      emailInstitucional: true,
       criadoEm: true,
       cargos: { select: { cargo: true } },
     },
@@ -50,7 +50,7 @@ export async function atualizarUsuario(
       nomeSocial: data.nomeSocial ?? usuario.nomeSocial,
       senha: senhaHash,
     },
-    select: { id: true, nome: true, email: true },
+    select: { id: true, nome: true, emailInstitucional: true },
   });
 
   return usuarioAtualizado;
