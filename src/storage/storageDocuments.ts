@@ -1,39 +1,90 @@
-import fs from "fs/promises";
-import path from "path";
+import { AppError } from "../errors/AppError";
+import { supabase } from "../lib/supabase";
 import crypto from "crypto";
 
-const BASE_DIR = path.resolve(__dirname, "../../uploads");
+const BUCKET_IMAGEM = process.env.SUPABASE_BUCKET_IMAGEM || "deppi-image";
+const BUCKET_DOCS = process.env.SUPABASE_BUCKET_DOCS || "deppi-docs";
 
-interface ArquivoSalvo {
-  nomeArquivo: string;
-  caminho: string;
-}
+export const storageService = {
+  async salvar(
+    buffer: Buffer, 
+    nomeOriginal: string, 
+    subpasta: string,
+    bucket: string = BUCKET_DOCS,
+    contentType?: string,
+  ){
+    const nomeArquivo = `${crypto.randomUUID()}-$${nomeOriginal}`;
+    const caminho = `${subpasta}/${nomeArquivo}`;
 
-class LocalStorageService {
-  async salvar(buffer: Buffer, nomeOriginal: string, subpasta: string): Promise<ArquivoSalvo> {
-    const extensao = path.extname(nomeOriginal);
-    const nomeArquivo = `${crypto.randomUUID()}${extensao}`;
-    const pastaDestino = path.join(BASE_DIR, subpasta);
+    const { error } = await supabase.storage
+      .from("covers")
+      .upload(caminho, buffer, {
+        contentType: contentType,
+      });
 
-    await fs.mkdir(pastaDestino, { recursive: true });
+    if (error) {
+      throw new AppError(error.message);
+    }
 
-    const caminhoCompleto = path.join(pastaDestino, nomeArquivo);
-    await fs.writeFile(caminhoCompleto, buffer);
-
-    return {
-      nomeArquivo,
-      caminho: path.join(subpasta, nomeArquivo),
+    const { data } = supabase.storage
+      .from("covers")
+      .getPublicUrl(caminho);
+    
+    return { 
+      nomeArquivo, 
+      caminho: data.publicUrl, 
+      bucket, 
+      caminhoStorage: caminho
     };
+  },
+
+  async remover(
+    caminho: string,
+    bucket: string = BUCKET_DOCS
+  ) {
+    const url = new URL(caminho);
+
+    const marker = `/storage/v1/object/public/${bucket}/`;
+
+    if (!url.pathname.includes(marker)) {
+      throw new AppError("URL do arquivo não pertence ao bucket esperado.");
+    }
+
+    const partes = url.pathname.split(marker);
+    const caminhoCodificado = partes[1];
+
+    if (!caminhoCodificado) {
+      throw new AppError("Não foi possível identificar o caminho do arquivo no Supabase.");
+    }
+
+    const caminhoStorage = decodeURIComponent(caminhoCodificado);
+
+    const { error } = await supabase.storage
+      .from(bucket)
+      .remove([caminhoStorage]);
+
+    if (error) {
+      throw new AppError(`Erro ao remover arquivo: ${error.message}`);
+    }
+  },
+
+  getUrlPublica(
+    caminhoStorage: string,
+    bucket: string = BUCKET_DOCS,
+  ) {
+    const { data } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(caminhoStorage)
+
+    return data.publicUrl;
+  },
+
+  getBucketImagem() {
+    return BUCKET_IMAGEM;
+  },
+
+  getBucketDocumentos() {
+    return BUCKET_DOCS;
   }
 
-  async remover(caminhoRelativo: string): Promise<void> {
-    const caminhoCompleto = path.join(BASE_DIR, caminhoRelativo);
-    await fs.unlink(caminhoCompleto).catch(() => {});
-  }
-
-  resolverCaminhoAbsoluto(caminhoRelativo: string): string {
-    return path.join(BASE_DIR, caminhoRelativo);
-  }
-}
-
-export const storageService = new LocalStorageService();
+};
