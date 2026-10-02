@@ -17,7 +17,7 @@ export const storageService = {
     const caminho = `${subpasta}/${nomeArquivo}`;
 
     const { error } = await supabase.storage
-      .from("covers")
+      .from(bucket)
       .upload(caminho, buffer, {
         contentType: contentType,
       });
@@ -27,7 +27,7 @@ export const storageService = {
     }
 
     const { data } = supabase.storage
-      .from("covers")
+      .from(bucket)
       .getPublicUrl(caminho);
     
     return { 
