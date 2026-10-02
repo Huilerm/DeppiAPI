@@ -1,4 +1,3 @@
-import path from "path";
 import { AppError } from "../errors/AppError";
 import { prisma } from "../lib/prisma";
 import { storageService } from "../storage/storageDocuments";
@@ -29,6 +28,8 @@ export class UploadCoverService {
             file.buffer,
             file.originalname,
             subpasta,
+            storageService.getBucketImagem(),
+            file.mimetype
         );
 
         const uploadedCover = await prisma.capa.create({
@@ -73,6 +74,6 @@ export class ShowCoverService {
             throw new AppError("Imagem não encontrada");
         }
 
-        return path.resolve(curso.Capa.path);
+        return curso.Capa.path;
     }
 }
