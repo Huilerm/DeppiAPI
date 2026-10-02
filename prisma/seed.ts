@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
 import { prisma } from "../src/lib/prisma";
 
-const TEST_PASSWORD = process.env.SEED_TEST_PASSWORD || "Pweb@2026!";
+const TEST_PASSWORD = process.env.SEED_TEST_PASSWORD || "12345678";
 const BUCKET_DOCS = process.env.SUPABASE_BUCKET_DOCS || "deppi-docs";
 const BUCKET_IMAGEM = process.env.SUPABASE_BUCKET_IMAGEM || "deppi-imagem";
 
