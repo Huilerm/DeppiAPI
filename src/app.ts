@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import type { Request, Response, NextFunction } from "express";
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
@@ -14,6 +15,11 @@ import documentoRouter from "./routes/documento.routes.js";
 
 const PORT = process.env.PORT ?? 3000;
 const app = express();
+
+app.use(cors({
+  origin: ["http://localhost:3000"],
+}));
+
 app.use(express.json());
 
 // ── Rotas ────────────────────────────────────────────────────────
