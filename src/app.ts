@@ -16,9 +16,16 @@ import documentoRouter from "./routes/documento.routes.js";
 const PORT = process.env.PORT ?? 3000;
 const app = express();
 
-app.use(cors({
-  origin: ["http://localhost:3000"],
-}));
+const origensPermitidas = [
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,
+].filter((origem): origem is string => Boolean(origem));
+
+app.use(
+  cors({
+    origin: origensPermitidas,
+  }),
+);
 
 app.use(express.json());
 
