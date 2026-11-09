@@ -70,8 +70,13 @@ export class CourseController {
       const curso = await courseService.updateCourse(id, req.body, usuarioLogado);
       return res.status(200).json({ message: "Curso atualizado com sucesso.", data: curso });
     } catch (error: any) {
-      const status = error.message.includes("Acesso negado.") ? 403
-        : error.message.includes("Não encontrado.") ? 404 : 400;
+      const status =
+  error.message.includes("Acesso negado.") ||
+  error.message.includes("Apenas o DEPPI")
+    ? 403
+    : error.message.includes("Não encontrado.")
+      ? 404
+      : 400;
       return res.status(status).json({ error: error.message });
     }
   }
