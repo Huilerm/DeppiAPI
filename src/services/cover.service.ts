@@ -74,6 +74,9 @@ export class ShowCoverService {
             throw new AppError("Imagem não encontrada");
         }
 
-        return curso.Capa.path;
+        return await storageService.getUrlAssinada(
+  curso.Capa.path,
+  storageService.getBucketImagem()
+);
     }
 }
