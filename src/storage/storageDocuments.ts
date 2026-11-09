@@ -2,24 +2,27 @@ import { AppError } from "../errors/AppError";
 import { supabase } from "../lib/supabase";
 import crypto from "crypto";
 
-const BUCKET_IMAGEM = process.env.SUPABASE_BUCKET_IMAGEM || "deppi-imagem";
-const BUCKET_DOCS = process.env.SUPABASE_BUCKET_DOCS || "deppi-docs";
+const BUCKET_IMAGEM =
+  process.env.SUPABASE_BUCKET_IMAGEM || "deppi-imagem";
+
+const BUCKET_DOCS =
+  process.env.SUPABASE_BUCKET_DOCS || "deppi-docs";
 
 export const storageService = {
   async salvar(
-    buffer: Buffer, 
-    nomeOriginal: string, 
+    buffer: Buffer,
+    nomeOriginal: string,
     subpasta: string,
     bucket: string = BUCKET_DOCS,
     contentType?: string,
-  ){
-    const nomeArquivo = `${crypto.randomUUID()}-$${nomeOriginal}`;
+  ) {
+    const nomeArquivo = `${crypto.randomUUID()}-${nomeOriginal}`;
     const caminho = `${subpasta}/${nomeArquivo}`;
 
     const { error } = await supabase.storage
       .from(bucket)
       .upload(caminho, buffer, {
-        contentType: contentType,
+        contentType,
       });
 
     if (error) {
@@ -29,12 +32,12 @@ export const storageService = {
     const { data } = supabase.storage
       .from(bucket)
       .getPublicUrl(caminho);
-    
-    return { 
-      nomeArquivo, 
-      caminho: data.publicUrl, 
-      bucket, 
-      caminhoStorage: caminho
+
+    return {
+      nomeArquivo,
+      caminho: data.publicUrl,
+      bucket,
+      caminhoStorage: caminho,
     };
   },
 
@@ -47,14 +50,18 @@ export const storageService = {
     const marker = `/storage/v1/object/public/${bucket}/`;
 
     if (!url.pathname.includes(marker)) {
-      throw new AppError("URL do arquivo não pertence ao bucket esperado.");
+      throw new AppError(
+        "URL do arquivo não pertence ao bucket esperado."
+      );
     }
 
     const partes = url.pathname.split(marker);
     const caminhoCodificado = partes[1];
 
     if (!caminhoCodificado) {
-      throw new AppError("Não foi possível identificar o caminho do arquivo no Supabase.");
+      throw new AppError(
+        "Não foi possível identificar o caminho do arquivo no Supabase."
+      );
     }
 
     const caminhoStorage = decodeURIComponent(caminhoCodificado);
@@ -64,7 +71,9 @@ export const storageService = {
       .remove([caminhoStorage]);
 
     if (error) {
-      throw new AppError(`Erro ao remover arquivo: ${error.message}`);
+      throw new AppError(
+        `Erro ao remover arquivo: ${error.message}`
+      );
     }
   },
 
@@ -74,7 +83,7 @@ export const storageService = {
   ) {
     const { data } = supabase.storage
       .from(bucket)
-      .getPublicUrl(caminhoStorage)
+      .getPublicUrl(caminhoStorage);
 
     return data.publicUrl;
   },
@@ -85,6 +94,52 @@ export const storageService = {
 
   getBucketDocumentos() {
     return BUCKET_DOCS;
-  }
+  },
 
+  async getUrlAssinada(
+    urlPublica: string,
+    bucket: string = BUCKET_IMAGEM,
+    expiracao: number = 86400
+  ): Promise<string> {
+    let caminhoStorage: string;
+
+    try {
+      const url = new URL(urlPublica);
+
+      const marcador =
+        `/storage/v1/object/public/${bucket}/`;
+
+      const indice = url.pathname.indexOf(marcador);
+
+      if (indice === -1) {
+        throw new AppError(
+          "A URL da capa não corresponde ao bucket configurado."
+        );
+      }
+
+      caminhoStorage = decodeURIComponent(
+        url.pathname.slice(indice + marcador.length)
+      );
+
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+
+      throw new AppError(
+        "A URL armazenada para a capa é inválida."
+      );
+    }
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(caminhoStorage, expiracao);
+
+    if (error || !data?.signedUrl) {
+      throw new AppError(
+        error?.message ??
+          "Não foi possível gerar a URL da capa."
+      );
+    }
+
+    return data.signedUrl;
+  },
 };
