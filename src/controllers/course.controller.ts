@@ -4,9 +4,27 @@ import { CourseService, UsuarioLogado } from '../services/course.service';
 const courseService = new CourseService();
 
 function getUsuarioLogado(req: Request): UsuarioLogado {
-  const user = (req as any).user;
-  if (!user) throw new Error("Usuário não autenticado.");
-  return user;
+  const user = req.user;
+
+  if (!user) {
+    throw new Error("Usuário não autenticado.");
+  }
+
+  const cargos = user.permissions ?? [];
+
+  const cargo: UsuarioLogado["cargo"] =
+    cargos.includes("DEPPI")
+      ? "DEPPI"
+      : cargos.includes("ADMIN")
+        ? "ADMIN"
+        : cargos.includes("PROFESSOR")
+          ? "PROFESSOR"
+          : "ALUNO";
+
+  return {
+    userId: user.userId,
+    cargo,
+  };
 }
 
 export class CourseController {
