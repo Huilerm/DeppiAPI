@@ -14,7 +14,35 @@ import {
   listarInscricoes,
   rejeitarInscricao,
   adicionarRendaFamiliar,
+  listarMinhasInscricoes
 } from "../services/inscricao.service";
+
+
+export async function minhas(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const usuarioId = req.user?.userId;
+
+    if (!usuarioId) {
+      res.status(401).json({
+        mensagem: "Não autorizado",
+      });
+      return;
+    }
+
+    const inscricoes = await listarMinhasInscricoes(usuarioId);
+
+    res.status(200).json({
+      mensagem: "Minhas inscrições encontradas",
+      inscricoes,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 export async function criar(
   req: Request,
