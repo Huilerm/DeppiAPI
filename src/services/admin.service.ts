@@ -1,26 +1,118 @@
+
 import { prisma } from "../lib/prisma";
-import { CadastroInput, PromoverInput } from "../schemas/cadastro.schema";
+import { AppError } from "../errors/AppError";
+import { PromoverInput } from "../schemas/cadastro.schema";
 
-type UserType = "ADMIN" | "DEPPI";
+export async function concederCargo(data: PromoverInput) {
+  return prisma.$transaction(async (tx) => {
+    // Verifica se o usuário existe
+    const usuario = await tx.usuario.findUnique({
+      where: { id: data.id },
+      select: {
+        id: true,
+        cargos: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
 
-// Admin/Deppi nãoé um usuário novo, mas sim um cargo
-// Então essa função adiciona esse cargo
-export async function createAdminDeppi(
-  data: PromoverInput,
-  userType: UserType,
-) {
-  const userId = data.id!;
-  let updateToAdmin;
-  if (userType === "ADMIN") {
-    updateToAdmin = await prisma.usuario.update({
-      where: { id: userId },
-      data: { cargos: { connect: { id: 4 } } },
+    if (!usuario) {
+      throw new AppError("Usuário não encontrado", 404);
+    }
+
+    // Busca o cargo pelo nome, sem depender de IDs fixos
+    const cargo = await tx.cargo.findFirst({
+      where: {
+        cargo: data.cargo,
+      },
     });
-  } else if (userType === "DEPPI") {
-    updateToAdmin = await prisma.usuario.update({
-      where: { id: userId },
-      data: { cargos: { connect: { id: 3 } } },
+
+    if (!cargo) {
+      throw new AppError("Cargo não encontrado", 404);
+    }
+
+    // Tratamento específico para PROFESSOR
+    if (data.cargo === "PROFESSOR") {
+      const professorExistente = await tx.professor.findUnique({
+        where: {
+          fkUsuario: data.id,
+        },
+      });
+
+      // Cria o perfil somente se ainda não existir
+      if (!professorExistente) {
+        if (!data.siape) {
+          throw new AppError(
+            "Informe o SIAPE para cadastrar o perfil de professor",
+            400,
+          );
+        }
+
+        const siapeExistente = await tx.professor.findUnique({
+          where: {
+            siape: data.siape,
+          },
+        });
+
+        if (siapeExistente) {
+          throw new AppError("Este SIAPE já está cadastrado", 409);
+        }
+
+        await tx.professor.create({
+          data: {
+            siape: data.siape,
+            fkUsuario: data.id,
+          },
+        });
+      }
+    }
+
+    // Verifica se o usuário já possui o cargo
+    const jaPossuiCargo = usuario.cargos.some(
+      (cargoUsuario) => cargoUsuario.id === cargo.id,
+    );
+
+    // Associa o cargo ao usuário
+    if (!jaPossuiCargo) {
+      await tx.usuario.update({
+        where: {
+          id: data.id,
+        },
+        data: {
+          cargos: {
+            connect: {
+              id: cargo.id,
+            },
+          },
+        },
+      });
+    }
+
+    // Retorna os dados atualizados
+    const usuarioAtualizado = await tx.usuario.findUnique({
+      where: {
+        id: data.id,
+      },
+      select: {
+        id: true,
+        nome: true,
+        emailInstitucional: true,
+        cargos: {
+          select: {
+            cargo: true,
+          },
+        },
+        professor: {
+          select: {
+            id: true,
+            siape: true,
+          },
+        },
+      },
     });
-  }
-  return updateToAdmin;
+
+    return usuarioAtualizado;
+  });
 }
