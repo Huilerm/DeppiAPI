@@ -49,3 +49,20 @@ export async function atualizar(req: Request, res: Response, next: NextFunction)
     next(error);
   }
 }
+
+// Excluir usuário
+export async function excluir(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    await userService.excluirUsuario(req.params.id);
+
+    res.status(200).json({
+      msg: "Usuário excluído com sucesso",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
