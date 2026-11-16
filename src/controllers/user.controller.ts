@@ -56,9 +56,12 @@ export async function excluir(
   next: NextFunction,
 ) {
   try {
-    const usuarioId = req.params.id;
+    const parametroId = req.params.id;
+    const usuarioId = Array.isArray(parametroId)
+      ? parametroId[0]
+      : parametroId;
 
-    if (!usuarioId) {
+    if (typeof usuarioId !== "string" || !usuarioId.trim()) {
       res.status(400).json({ msg: "ID do usuário não informado" });
       return;
     }
