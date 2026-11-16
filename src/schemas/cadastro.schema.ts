@@ -44,9 +44,19 @@ export const cadastroSchema = z.object({
   siape: z.string().optional(),
 });
 
+
 export const promoverSchema = z.object({
   id: z.string().uuid("ID inválido"),
-  cargo: z.enum(["ADMIN", "DEPPI"])
+  cargo: z.enum(["ADMIN", "DEPPI", "PROFESSOR"]),
+  siape: z.string().trim().optional(),
+}).superRefine((data, ctx) => {
+  if (data.cargo === "PROFESSOR" && !data.siape) {
+    ctx.addIssue({
+      code: "custom",
+      message: "SIAPE é obrigatório para conceder o cargo PROFESSOR",
+      path: ["siape"],
+    });
+  }
 });
 
 export type CadastroInput = z.infer<typeof cadastroSchema>;
