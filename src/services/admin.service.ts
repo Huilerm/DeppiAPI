@@ -75,20 +75,35 @@ export async function concederCargo(data: PromoverInput) {
     );
 
     // Associa o cargo ao usuário
-    if (!jaPossuiCargo) {
-      await tx.usuario.update({
-        where: {
-          id: data.id,
+if (!jaPossuiCargo || data.cargo === "PROFESSOR") {
+  await tx.usuario.update({
+    where: {
+      id: data.id,
+    },
+    data: {
+      cargos: {
+        // Se for professor, remove o cargo ALUNO
+        ...(data.cargo === "PROFESSOR"
+          ? {
+              disconnect: await tx.cargo.findMany({
+                where: {
+                  cargo: "ALUNO",
+                },
+                select: {
+                  id: true,
+                },
+              }),
+            }
+          : {}),
+
+        // Adiciona o novo cargo
+        connect: {
+          id: cargo.id,
         },
-        data: {
-          cargos: {
-            connect: {
-              id: cargo.id,
-            },
-          },
-        },
-      });
-    }
+      },
+    },
+  });
+}
 
     // Retorna os dados atualizados
     const usuarioAtualizado = await tx.usuario.findUnique({
