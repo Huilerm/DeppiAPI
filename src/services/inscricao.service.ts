@@ -128,6 +128,64 @@ export async function listarInscricoes(status?: StatusInscricao) {
   });
 }
 
+
+export async function listarMinhasInscricoes(usuarioId: string) {
+  // Busca o aluno vinculado ao usuário autenticado
+  const aluno = await prisma.aluno.findUnique({
+    where: {
+      fkUsuario: usuarioId,
+    },
+  });
+
+  if (!aluno) {
+    throw new AppError("Aluno não encontrado", 404);
+  }
+
+  // Busca somente as inscrições pertencentes ao aluno
+  return prisma.inscricao.findMany({
+    where: {
+      fkAluno: aluno.id,
+    },
+    orderBy: {
+      data: "desc",
+    },
+    select: {
+      id: true,
+      data: true,
+      status: true,
+
+      curso: {
+        select: {
+          id: true,
+          nome: true,
+          dataInicio: true,
+          dataFim: true,
+          horarioInicio: true,
+          horarioFim: true,
+          carga_horaria: true,
+
+          Instituicao: {
+            select: {
+              nome: true,
+              campus: true,
+            },
+          },
+        },
+      },
+
+      documentos: {
+        select: {
+          id: true,
+          nomeOriginal: true,
+          categoria: true,
+          criadoEm: true,
+        },
+      },
+    },
+  });
+}
+
+
 export async function buscarInscricao(id: string) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
