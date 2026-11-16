@@ -7,6 +7,7 @@ import {
   historico,
   listar,
   rejeitar,
+  minhas,
 } from "../controllers/inscricao.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { verificarPermissao } from "../middleware/rbac.middleware";
@@ -43,6 +44,12 @@ inscricaoRouter.get(
   "/:id/documentos",
   authMiddleware,
   listarDaInscricao
+);
+
+inscricaoRouter.get(
+  "/minhas",
+  authMiddleware,
+  minhas
 );
 
 inscricaoRouter.use(authMiddleware, verificarPermissao("GERENCIAR_INSCRICAO"));
