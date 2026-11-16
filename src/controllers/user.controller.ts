@@ -50,18 +50,29 @@ export async function atualizar(req: Request, res: Response, next: NextFunction)
   }
 }
 
-// Excluir usuário
 export async function excluir(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    await userService.excluirUsuario(req.params.id);
+    const usuarioId = req.params.id;
 
-    res.status(200).json({
-      msg: "Usuário excluído com sucesso",
-    });
+    if (!usuarioId) {
+      res.status(400).json({ msg: "ID do usuário não informado" });
+      return;
+    }
+
+    if (req.user?.userId === usuarioId) {
+      res.status(400).json({
+        msg: "Você não pode excluir sua própria conta",
+      });
+      return;
+    }
+
+    const resultado = await userService.excluirUsuario(usuarioId);
+
+    res.status(200).json(resultado);
   } catch (error) {
     next(error);
   }
