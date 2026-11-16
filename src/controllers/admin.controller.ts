@@ -1,6 +1,7 @@
+
 import { Request, Response, NextFunction } from "express";
 import { promoverSchema } from "../schemas/cadastro.schema";
-import { createAdminDeppi } from "../services/admin.service";
+import { concederCargo } from "../services/admin.service";
 
 export async function createAdmin(
   req: Request,
@@ -9,24 +10,25 @@ export async function createAdmin(
 ) {
   try {
     const parsed = promoverSchema.safeParse(req.body);
+
     if (!parsed.success) {
-      res
-        .status(400)
-        .json({ msg: "Dados Inválidos", erros: parsed.error.issues });
+      res.status(400).json({
+        msg: "Dados inválidos",
+        erros: parsed.error.issues,
+      });
       return;
     }
-    let user;
-    if (parsed.data.cargo === "ADMIN") {
-      user = await createAdminDeppi(parsed.data, parsed.data.cargo);
-    } else if (parsed.data.cargo === "DEPPI") {
-      user = await createAdminDeppi(parsed.data, parsed.data.cargo);
-    }
+
+    const usuario = await concederCargo(parsed.data);
+
     res.status(201).json({
-      msg: `${parsed.data.cargo} criado`,
+      msg: `Cargo ${parsed.data.cargo} concedido com sucesso`,
       usuario: {
-        id: user?.id,
-        nome: user?.nome,
-        email: user?.emailInstitucional,
+        id: usuario?.id,
+        nome: usuario?.nome,
+        email: usuario?.emailInstitucional,
+        cargos: usuario?.cargos,
+        professor: usuario?.professor,
       },
     });
   } catch (error) {
