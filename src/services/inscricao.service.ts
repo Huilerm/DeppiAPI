@@ -181,6 +181,13 @@ export async function listarMinhasInscricoes(usuarioId: string) {
           criadoEm: true,
         },
       },
+
+      rendaFamiliar: {
+        select: {
+          rendaFamiliar: true,
+          numeroPessoas: true,
+        },
+      },
     },
   });
 }
