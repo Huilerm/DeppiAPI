@@ -124,3 +124,31 @@ export async function remover(req: Request, res: Response, next: NextFunction) {
     next(error);
   }
 }
+
+export async function urlDocumento(req: Request, res: Response, next: NextFunction) {
+  try {
+    const params = documentoIdParamsSchema.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ mensagem: "Dados inválidos", erros: params.error.issues });
+      return;
+    }
+
+    const usuarioId = req.user?.userId;
+    if (!usuarioId) {
+      res.status(401).json({ mensagem: "Não autorizado" });
+      return;
+    }
+
+    const documento = await buscarDocumento(params.data.id, usuarioId);
+
+    const url = await storageService.getUrlAssinada(
+      documento.caminho,
+      storageService.getBucketDocumentos(),
+      3600,
+    );
+
+    res.status(200).json({ url });
+  } catch (error) {
+    next(error);
+  }
+}
